@@ -56,7 +56,7 @@ namespace TempData
             computer.Open();
 
             ushort [] data = new ushort[8];
-            byte[] buffer = new byte[32];
+            byte[] buffer = new byte[128];
 
             while (true)
             {
@@ -67,6 +67,7 @@ namespace TempData
                 _serialPort.Handshake = Handshake.None;
                 _serialPort.BaudRate = 921600;
                 int lastSentMinute = -1;
+                int busyTimer = 0;
                 
                 try
                 {
@@ -149,8 +150,6 @@ namespace TempData
                         }
                         try
                         {
-
-
                             buffer[0] = 0x03;
                             for (int i = 0; i < 8; i++)
                             {
@@ -183,6 +182,31 @@ namespace TempData
                         {
                             break;
                         }
+
+                        if (GetLastUserInput.GetIdleMilliseconds() < 120000)
+                        {
+                            busyTimer++;
+                            if (busyTimer >= 3600)
+                            {
+                                busyTimer = 0;
+                                _serialPort.DiscardInBuffer();
+                                buffer[0] = 0x07;
+                                buffer[1] = 10;
+                                buffer[2] = 1;
+                                string str = "Alzati minchione!";
+                                Encoding.ASCII.GetBytes(str, 0, str.Length, buffer, 3);
+                                str = "Non muovi il culo da un'ora!";
+                                Encoding.ASCII.GetBytes(str, 0, str.Length, buffer, 53);
+
+                                _serialPort.Write(buffer, 0, 103);
+                                _serialPort.ReadByte();
+                            }
+                        }
+                        else
+                        {
+                            busyTimer = 0;
+                        }
+
                     }
                     else
                     {
