@@ -96,6 +96,9 @@ extension String {
             case "Û", "Ü":
                 result.append("U")
                 break;
+            case "’":
+                result.append("'")
+                break;
             default:
                 result.append(char)
                 break
